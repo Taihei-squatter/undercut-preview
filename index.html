@@ -715,20 +715,8 @@ footer{
   color:var(--dim);
 }
 
-/* ---- reduced motion ---- */
-@media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
-  html{scroll-behavior:auto}
-  .hero-title span,.hero-eyebrow,.hero-sub,.scroll-cue{opacity:1;transform:none}
-  .reveal,.line-reveal .line > i{opacity:1;transform:none}
-  .narrative{height:auto}
-  .narrative-stage{position:static;height:auto;padding:80px 0;display:flex;flex-direction:column;gap:40px}
-  .scene{position:static;opacity:1;visibility:visible}
-  .fx,.sweat{display:none}
-  .narrative-line{transform:none}
-  .moment{opacity:1}
-  body::after{display:none}
-}
+/* motion is intentionally always-on: this page does not honor
+   prefers-reduced-motion, so animations play regardless of OS setting */
 </style>
 </head>
 <body>
