@@ -907,16 +907,23 @@ footer{
   track.innerHTML += track.innerHTML;
 })();
 
-/* ---- autoplay fallback: kick hero video on first gesture if it hasn't started ---- */
+/* ---- force hero video to start: retry on every readiness/interaction signal until it plays ---- */
 (function(){
   const video = document.getElementById('heroVideo');
-  let kicked = false;
-  function kick(){
-    if (kicked || !video.paused) return;
-    kicked = true;
-    video.play().catch(() => { kicked = false; });
+  function forcePlay(){
+    if (!video.paused) return;
+    const p = video.play();
+    if (p && p.catch) p.catch(() => {});
   }
-  ['touchend','click','scroll'].forEach(evt => addEventListener(evt, kick, {passive: true}));
+  forcePlay();
+  video.addEventListener('loadedmetadata', forcePlay);
+  video.addEventListener('canplay', forcePlay);
+  video.addEventListener('pause', forcePlay);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) forcePlay(); });
+  ['touchstart','touchend','click','pointerdown','scroll','keydown'].forEach(evt =>
+    addEventListener(evt, forcePlay, {passive: true})
+  );
+  setInterval(forcePlay, 1000);
 })();
 
 /* ---- header state ---- */
