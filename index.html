@@ -94,6 +94,7 @@ header.scrolled{
 /* ---- hero ---- */
 .hero{
   position:relative;
+  height:100vh;
   height:100svh;
   overflow:hidden;
   display:flex;align-items:center;justify-content:center;
@@ -105,8 +106,8 @@ header.scrolled{
 }
 .hero-video iframe{
   position:absolute;top:50%;left:50%;
-  width:max(100vw,178svh);
-  height:max(100svh,56.25vw);
+  width:max(100vw,178vh,178svh);
+  height:max(100vh,100svh,56.25vw);
   transform:translate(-50%,-50%) scale(1.02);
   border:0;
 }
@@ -281,9 +282,10 @@ section{position:relative}
 .reveal.in{opacity:1;transform:none}
 
 /* ---- narrative (sticky scroll story) ---- */
-.narrative{height:420svh;background:#000}
+.narrative{height:420vh;height:420svh;background:#000}
 .narrative-stage{
   position:sticky;top:0;
+  height:100vh;
   height:100svh;
   overflow:hidden;
 }
@@ -741,7 +743,8 @@ footer{
 <section class="hero">
   <div class="hero-video" aria-hidden="true">
     <iframe
-      src="https://www.youtube-nocookie.com/embed/HantJGth3yk?autoplay=1&mute=1&loop=1&playlist=HantJGth3yk&controls=0&rel=0&playsinline=1&modestbranding=1&iv_load_policy=3&disablekb=1"
+      id="heroVideo"
+      src="https://www.youtube-nocookie.com/embed/HantJGth3yk?autoplay=1&mute=1&loop=1&playlist=HantJGth3yk&controls=0&rel=0&playsinline=1&modestbranding=1&iv_load_policy=3&disablekb=1&enablejsapi=1"
       title="UNDERCUT background film"
       allow="autoplay; encrypted-media"
       tabindex="-1"></iframe>
@@ -902,6 +905,20 @@ footer{
 (function(){
   const track = document.getElementById('marqueeTrack');
   track.innerHTML += track.innerHTML;
+})();
+
+/* ---- iOS autoplay fallback: kick hero video on first gesture if it hasn't started ---- */
+(function(){
+  const frame = document.getElementById('heroVideo');
+  let kicked = false;
+  function kick(){
+    if (kicked) return;
+    kicked = true;
+    try {
+      frame.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*');
+    } catch(e){}
+  }
+  ['touchend','click','scroll'].forEach(evt => addEventListener(evt, kick, {once:true, passive:true}));
 })();
 
 /* ---- header state ---- */
