@@ -104,12 +104,11 @@ header.scrolled{
   overflow:hidden;
   pointer-events:none;
 }
-.hero-video iframe{
-  position:absolute;top:50%;left:50%;
-  width:max(100vw,178vh,178svh);
-  height:max(100vh,100svh,56.25vw);
-  transform:translate(-50%,-50%) scale(1.02);
-  border:0;
+.hero-video video{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;
+  transform:scale(1.02);
 }
 .hero-shade{
   position:absolute;inset:0;
@@ -742,12 +741,13 @@ footer{
 <!-- ============ HERO ============ -->
 <section class="hero">
   <div class="hero-video" aria-hidden="true">
-    <iframe
+    <video
       id="heroVideo"
-      src="https://www.youtube-nocookie.com/embed/HantJGth3yk?autoplay=1&mute=1&loop=1&playlist=HantJGth3yk&controls=0&rel=0&playsinline=1&modestbranding=1&iv_load_policy=3&disablekb=1&enablejsapi=1"
-      title="UNDERCUT background film"
-      allow="autoplay; encrypted-media"
-      tabindex="-1"></iframe>
+      src="hero-loop.mp4"
+      poster="hero-poster.jpg"
+      autoplay muted loop playsinline
+      disablepictureinpicture
+      tabindex="-1"></video>
   </div>
   <div class="hero-shade"></div>
   <div class="hero-inner">
@@ -907,18 +907,16 @@ footer{
   track.innerHTML += track.innerHTML;
 })();
 
-/* ---- iOS autoplay fallback: kick hero video on first gesture if it hasn't started ---- */
+/* ---- autoplay fallback: kick hero video on first gesture if it hasn't started ---- */
 (function(){
-  const frame = document.getElementById('heroVideo');
+  const video = document.getElementById('heroVideo');
   let kicked = false;
   function kick(){
-    if (kicked) return;
+    if (kicked || !video.paused) return;
     kicked = true;
-    try {
-      frame.contentWindow.postMessage(JSON.stringify({event:'command', func:'playVideo', args:[]}), '*');
-    } catch(e){}
+    video.play().catch(() => { kicked = false; });
   }
-  ['touchend','click','scroll'].forEach(evt => addEventListener(evt, kick, {once:true, passive:true}));
+  ['touchend','click','scroll'].forEach(evt => addEventListener(evt, kick, {passive: true}));
 })();
 
 /* ---- header state ---- */
