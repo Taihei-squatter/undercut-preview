@@ -932,7 +932,8 @@ addEventListener('scroll', () => {
   header.classList.toggle('scrolled', scrollY > 40);
 }, {passive: true});
 
-/* ---- reveal on scroll ---- */
+/* ---- reveal on scroll (+ forced fallback when the page can't actually be scrolled,
+   e.g. clipped no-code embeds) ---- */
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) {
@@ -943,28 +944,53 @@ const io = new IntersectionObserver(entries => {
 }, {threshold: 0.2, rootMargin: '0px 0px -8% 0px'});
 document.querySelectorAll('.reveal, .line-reveal').forEach(el => io.observe(el));
 
-/* ---- narrative scroll story ---- */
+function pageIsScrollable(){
+  return document.documentElement.scrollHeight > innerHeight + 200;
+}
+if (!pageIsScrollable()) {
+  document.querySelectorAll('.reveal:not(.in), .line-reveal:not(.in)').forEach((el, i) => {
+    setTimeout(() => el.classList.add('in'), 300 + i * 140);
+  });
+}
+
+/* ---- narrative scroll story, with autoplay fallback so it always keeps moving
+   even when scroll isn't driving it (short/clipped embed contexts, or the
+   viewer just isn't scrolling right now) ---- */
 (function(){
   const sec = document.getElementById('narrative');
   const scenes = [...sec.querySelectorAll('.scene')];
   const counter = document.getElementById('narrativeCounter');
   const steps = scenes.length;
+  let idx = 0;
+  let lastScrollDrive = 0;
 
-  function update(){
+  function show(i){
+    idx = i;
+    scenes.forEach((el, n) => {
+      el.classList.toggle('active', n === i);
+      el.classList.toggle('passed', n < i);
+    });
+    counter.textContent = String(i + 1).padStart(2,'0') + ' — ' + String(steps).padStart(2,'0');
+  }
+
+  function updateFromScroll(){
     const r = sec.getBoundingClientRect();
     const total = r.height - innerHeight;
-    if (total <= 0) return;
+    if (total <= 0) return false;
     const p = Math.min(1, Math.max(0, -r.top / total));
-    const idx = Math.min(steps - 1, Math.floor(p * steps));
-    scenes.forEach((el, i) => {
-      el.classList.toggle('active', i === idx);
-      el.classList.toggle('passed', i < idx);
-    });
-    counter.textContent = String(idx + 1).padStart(2,'0') + ' — ' + String(steps).padStart(2,'0');
+    show(Math.min(steps - 1, Math.floor(p * steps)));
+    return true;
   }
-  addEventListener('scroll', update, {passive: true});
-  addEventListener('resize', update);
-  update();
+
+  addEventListener('scroll', () => {
+    if (updateFromScroll()) lastScrollDrive = Date.now();
+  }, {passive: true});
+  addEventListener('resize', updateFromScroll);
+  if (updateFromScroll()) lastScrollDrive = Date.now();
+
+  setInterval(() => {
+    if (Date.now() - lastScrollDrive > 3000) show((idx + 1) % steps);
+  }, 3200);
 })();
 
 /* ---- narrative: spark particles for「熱狂」---- */
